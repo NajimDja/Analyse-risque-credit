@@ -64,19 +64,21 @@ class DataAnalyse(FonctionsStats):
         df_stats.index = cols_num
         return df_stats
     
-    def analyse_var_categorielles(self, df : pd.DataFrame):
+    def analyse_var_categorielles(self, df : pd.DataFrame, col_to_ignore : list[str]):
         """Analyse des statistiques des variables catégorielles"""
         
         print("Analyse des variables catégorielles :")
         for j in df.columns:
-            if np.issubdtype(df[j].dtype, np.number):
-                pass
-            else:
-                print(df.groupby(by = j)\
+            if pd.api.types.is_string_dtype(df[j]) and j not in col_to_ignore:
+                print(f"Variable {j}")
+                df_catg = df.groupby(by = j)\
                     .size()\
-                    .reset_index(name = 'nb')\
-                    .sort_values(by="nb", ascending=False)\
-                    .reset_index(drop=True))
+                    .reset_index(name = 'Occurence')\
+                    .sort_values(by="Occurence", ascending=False)\
+                    .reset_index(drop=True)
+                df_catg['Pourcentage (%)'] = ((df_catg['Occurence']/sum(df_catg['Occurence']))*100).round(2)
+                print(df_catg, '\n')
+                
 
 
     def analyse_var_temporelles(self, df : pd.DataFrame):

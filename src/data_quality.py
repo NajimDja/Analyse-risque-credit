@@ -1,5 +1,4 @@
 # Methodes d'analyse de la qualité de la données
-# Ecriture d'un rapport sur la qualité de la données
 import pandas as pd
 import re
 
