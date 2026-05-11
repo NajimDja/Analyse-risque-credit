@@ -1,5 +1,6 @@
 # Methodes d'analyse de la qualité de la données
 import pandas as pd
+import numpy as np
 import re
 
 class DataQuality:
@@ -18,6 +19,33 @@ class DataQuality:
                             '% de null' : prct_null})
         df_null = pd.DataFrame(df_null)
         print(df_null)
+
+    def check_outliers(self, df : pd.DataFrame, col_to_ignore : list[str]):
+        """Check le nombre de valeurs aberrantes dans chaque colonne"""
+        outliers_stats = []
+        cols_num = [col for col in df.columns if pd.api.types.is_numeric_dtype(df[col]) and col not in col_to_ignore]
+        for i in cols_num:
+            series = df[i].dropna()
+            nan = df[i].isna().sum()
+            Q1 = np.percentile(series, 25)
+            Q3 = np.percentile(series, 75)
+            IQR = Q3 - Q1
+
+            lower_bound = Q1 - (1.5 * IQR)
+            upper_bound = Q3 + (1.5 * IQR)
+
+            nb_outliers = len((series[(series < lower_bound) | (series > upper_bound)]))
+            prct_outliers = round(((nb_outliers/len(series))*100), 2)
+
+            outliers_stats.append({
+                'Colonne' : i,
+                'Nombre de valeur aberrantes' : nb_outliers,
+                'Pourcentage de valeurs aberrantes' : prct_outliers,
+                'Nombre de NaN': nan
+            })
+
+        outliers_stats = pd.DataFrame(outliers_stats)
+        return outliers_stats
 
 
     def check_types(self, df : pd.DataFrame):
