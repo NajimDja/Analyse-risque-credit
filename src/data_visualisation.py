@@ -183,7 +183,8 @@ class DataVisualisation:
         """
         axes_flat, fig = self._make_grid(len(y_columns), axes)
         for ax, y_col in zip(axes_flat, y_columns):
-            ax.bar(df[x_column], df[y_col], alpha=0.7, label=y_col)
+            b = ax.bar(df[x_column], df[y_col], alpha=0.7, label=y_col)
+            ax.bar_label(b, label_type = 'center')
             ax.set_xlabel(x_column)
             ax.set_ylabel("Values")
             ax.set_title(f"Bar Chart — {y_col}")

@@ -100,3 +100,11 @@ class DataAnalyse(FonctionsStats):
             jours = (intervalle.days % 365) % 30
 
             print(f"Intervalle de temps des données de la colonnes {c} : {annees} années, {mois} mois, et {jours} jours")
+
+
+    def groupby_data(self, df : pd.DataFrame, col_x : list[str], col_y : str, operation : list[str]):
+        tmp = df.groupby(by=col_x, as_index=False)[col_y].agg(operation)
+        if operation == 'count':
+            tmp['prct'] = round((tmp['count'] / tmp['count'].sum())*100,2)
+            tmp['prct'] = [f"{x}%" for x in tmp['prct']]
+        return pd.DataFrame(tmp)
