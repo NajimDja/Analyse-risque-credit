@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from itertools import combinations
+from scipy.stats import chi2_contingency
 
 class FonctionsStats:
 
@@ -35,7 +37,21 @@ class FonctionsStats:
     
     def unique_vals(self, series : pd.Series):
         print(f"Valeurs uniques de la colonne {series.name} :\n{series.unique()}")
+    
+    def v_cramer(self, chi2, n, r, c):
+        return np.sqrt(chi2 / (n * (min(r, c) - 1)))
 
+    def force_v_cramer(self, cramer_v):
+        """Interprétation de la force du lien (rule of thumb)
+        0.00 - 0.10 : négligeable / 0.10 - 0.30 : faible / 0.30 - 0.50 : moyen / >= 0.50 : fort"""
+        if cramer_v < 0.10:
+            return "négligeable"
+        elif cramer_v < 0.30:
+            return "faible"
+        elif cramer_v < 0.50:
+            return "moyen"
+        else:
+            return "fort"
 
 class DataAnalyse(FonctionsStats):
 
@@ -108,3 +124,52 @@ class DataAnalyse(FonctionsStats):
             tmp['prct'] = round((tmp['count'] / tmp['count'].sum())*100,2)
             tmp['prct'] = [f"{x}%" for x in tmp['prct']]
         return pd.DataFrame(tmp)
+
+
+    def calcul_khi2(self, df : pd.DataFrame, alpha=0.05):
+        """
+        Calcule pour toutes les paires de colonnes catégorielles :
+        - Khi2, p-value, ddl
+        - V de Cramer (force du lien)
+        - interprétation de la force du lien
+        
+        Retourne un DataFrame avec ces résultats.
+        """
+        # Sélectionner les colonnes catégorielles ou discrètes
+        df['defaulted'] = df['defaulted'].map({0 : 'Non défaut', 1 : 'Défaut'})
+        cat_cols = df.select_dtypes(include=["object", "category", "str"]).columns.tolist()
+        
+        # Filtrer les colonnes avec trop de catégories (optionnel, à ajuster)
+        cat_cols = [c for c in cat_cols if df[c].nunique() <= 15]
+        results = []
+        
+        for col1, col2 in combinations(cat_cols, 2):
+            # Tableau de contingence
+            table = pd.crosstab(df[col1], df[col2])
+            
+            # Ignorer si une case a un effectif 0 (optionnel, selon ton besoin)
+            if table.min().min() == 0:
+                continue
+            
+            chi2, p_value, dof, expected = chi2_contingency(table)
+            n = table.values.sum()
+            r, c = table.shape
+            
+            # V de Cramer
+            cramer_v = self.v_cramer(chi2=chi2, n=n, r=r, c=c)
+            
+            # Interprétation de la force du lien (rule of thumb)
+            force = self.force_v_cramer(cramer_v=cramer_v)
+            
+            results.append({
+                "var1": col1,
+                "var2": col2,
+                "chi2": chi2,
+                "p_value": p_value,
+                "dof": dof,
+                "cramer_v": cramer_v,
+                "force_lien": force,
+                "significatif": p_value < alpha
+            })
+        
+        return pd.DataFrame(results)

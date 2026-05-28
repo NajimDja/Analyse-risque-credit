@@ -267,3 +267,10 @@ class DataVisualisation:
         if fig is not None:
             plt.tight_layout()
             plt.show()
+    
+    def plot_heatmap(self, df_corr : pd.DataFrame):
+        mask = np.triu(np.ones_like(df_corr, dtype=bool))
+        plt.figure(figsize=(10, 8))
+        sns.heatmap(df_corr, mask=mask, annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
+        plt.title("Matrice de corrélation")
+        plt.show()

@@ -8,18 +8,19 @@ class FeatureEncoding:
     Class regroupant les méthodes d'encodage des variables à des fins de modélisation
     
     Méthodes:
+     - one_hot_encoding
      - min_max_scaler: Ramène les données entre un intervalle de 0 et 1 ou un autre spécifié en entrée.
      - robust_scaler: Centre les données autour de la médiane et met à l'échelle en fonction de l'intervalle interquartile (IQR)
      - quantile_transformer: Mappe les données à une distribution uniforme entre 0 et 1, tout en étant robuste aux valeurs aberrantes
      - feature_scaler: scale les variables avec un des standardiseur ci-dessus, permet de récupérer le scaler fit sur les données de train.
     """
     
-    def one_hot_encoding_y(self, df : pd.DataFrame, col : str, prefix : str) -> pd.DataFrame:
+    def one_hot_encoding(self, df : pd.DataFrame, col : list[str]) -> pd.DataFrame:
         """
-        One hot encoding de la target y.
+        One hot encoding de la target.
         """
-        df = pd.get_dummies(df, columns=[col], prefix=[prefix], drop_first=False, dtype=int)
-        return df
+        return pd.get_dummies(data = df, columns=col, drop_first=False, dtype=int)
+    
 
     def min_max_scaler(self, X, feature_range : tuple = (0,1)):
         """
@@ -29,7 +30,7 @@ class FeatureEncoding:
         scaler = MinMaxScaler(feature_range = feature_range)
         scaled_data = scaler.fit_transform(X)
         X = scaled_data
-        return X, scaler
+        return X
     
     def robust_scaler(self, X, quantile_range : tuple = (0.25, 0.75)):
         """
@@ -41,7 +42,7 @@ class FeatureEncoding:
         scaler = RobustScaler(quantile_range = quantile_range)
         scaled_data = scaler.fit_transform(X)
         X = scaled_data
-        return X, scaler
+        return X
 
     def quantile_transformer(self, X, output_distribution : str = 'uniform'):
         """
@@ -54,7 +55,7 @@ class FeatureEncoding:
         scaler = QuantileTransformer(output_distribution = output_distribution, random_state=0)
         scaled_data = scaler.fit_transform(X)
         X = scaled_data
-        return X, scaler
+        return X
     
     def feature_scaler(self, X, scaler, feature_indices):
         """
