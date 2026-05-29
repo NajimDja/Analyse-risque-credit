@@ -1,6 +1,24 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler, RobustScaler, QuantileTransformer, OneHotEncoder
+from sklearn.preprocessing import MinMaxScaler, RobustScaler, QuantileTransformer, StandardScaler
+from sklearn.model_selection import train_test_split
+
+class SplitData:
+
+    def split_in_train_test_stratify(self, df : pd.DataFrame, y : str, test_size : int = 0.2):
+        """Diviser la données en dataset d'entrainement et de test"""
+
+        X = df.drop(columns=[y])
+        y = df[y]
+        
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, 
+            y, 
+            test_size=test_size, 
+            random_state=100, 
+            stratify=y)
+        
+        return X_train, X_test, y_train, y_test
 
 
 class FeatureEncoding:
@@ -28,9 +46,16 @@ class FeatureEncoding:
         Utilisation pour un df -> df['X_unif'], _ = FeatureEncoding().quantile_transformer(X = df[['X']])
         """
         scaler = MinMaxScaler(feature_range = feature_range)
-        scaled_data = scaler.fit_transform(X)
-        X = scaled_data
-        return X
+        X_scaled = scaler.fit_transform(X)
+        return X_scaled
+    
+    def standard_scaler(self, X):
+        """
+        Standardisation des données
+        """
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+        return X_scaled
     
     def robust_scaler(self, X, quantile_range : tuple = (0.25, 0.75)):
         """
@@ -40,9 +65,8 @@ class FeatureEncoding:
          - Il ne mets pas les valeurs entre 0 et 1
         """
         scaler = RobustScaler(quantile_range = quantile_range)
-        scaled_data = scaler.fit_transform(X)
-        X = scaled_data
-        return X
+        X_scaled = scaler.fit_transform(X)
+        return X_scaled
 
     def quantile_transformer(self, X, output_distribution : str = 'uniform'):
         """
@@ -53,13 +77,12 @@ class FeatureEncoding:
          - normal
         """
         scaler = QuantileTransformer(output_distribution = output_distribution, random_state=0)
-        scaled_data = scaler.fit_transform(X)
-        X = scaled_data
-        return X
+        X_scaled = scaler.fit_transform(X)
+        return X_scaled
     
-    def feature_scaler(self, X, scaler, feature_indices):
-        """
-        Scale selected features using the provided scaler
-        """
-        X[:, feature_indices] = scaler.transform(X[:, feature_indices])
-        return X
+    # def feature_scaler(self, X, scaler, feature_indices):
+    #     """
+    #     Scale selected features using the provided scaler
+    #     """
+    #     X[:, feature_indices] = scaler.transform(X[:, feature_indices])
+    #     return X
